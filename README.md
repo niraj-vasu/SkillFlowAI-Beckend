@@ -2,6 +2,14 @@
 
 A FastAPI backend for tracking fresher onboarding roadmaps and progress reports. **This backend performs no AI generation** — all AI agents (roadmap generation, work evaluation, Q&A, and daily/weekly/final report generation) live in the frontend dashboards. The backend's job is to authenticate users, enforce role and ownership access control, and store and serve whatever AI-generated results the frontend submits.
 
+## Deployed (production)
+
+- **Live API:** https://skill-flow-ai-beckend.vercel.app
+- **API docs:** https://skill-flow-ai-beckend.vercel.app/docs
+- **Verification dashboard:** https://skill-flow-ai-beckend.vercel.app/verify
+- Hosted on **Vercel** (serverless) with a **Neon Postgres** database. See [DEPLOY_VERCEL.md](DEPLOY_VERCEL.md).
+- Local development (below) uses SQLite and is independent of production.
+
 ## Scope (v2)
 
 v2 narrows the product to two roles only:

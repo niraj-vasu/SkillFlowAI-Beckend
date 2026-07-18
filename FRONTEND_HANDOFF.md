@@ -5,8 +5,8 @@ This backend stores and serves data only. It performs **no AI generation** — t
 ## Base URL & docs
 
 ```
-Base URL:  http://10.0.128.20:8000
-API docs:  http://10.0.128.20:8000/docs
+Base URL:  https://skill-flow-ai-beckend.vercel.app
+API docs:  https://skill-flow-ai-beckend.vercel.app/docs
 ```
 
 All REST endpoints are under `/api/`.
@@ -16,7 +16,7 @@ All REST endpoints are under `/api/`.
 A ready-to-run collection ships alongside this doc: **`SkillFlow_AI.postman_collection.json`**.
 
 1. In Postman: **Import** → select the file. It creates a "SkillFlow AI v2 — Backend" collection with folders **System / Auth / Fresher / PM** (31 requests).
-2. It defines a `base_url` collection variable (`http://10.0.128.20:8000`) — edit it if your server runs elsewhere.
+2. It defines a `base_url` collection variable (`https://skill-flow-ai-beckend.vercel.app`) — edit it if your server runs elsewhere.
 3. Run **Auth → Login (Fresher)** and **Auth → Login (PM)** first. Their test scripts automatically capture `{{fresher_token}}` and `{{pm_token}}`; every other request already sends the correct bearer token.
 4. **Create Roadmap** stores `{{roadmap_id}}` and **Create Daily Report** stores `{{report_id}}`, so the later requests resolve without manual copying.
 5. The whole collection also runs top-to-bottom in the **Collection Runner** (verified end-to-end with Newman: 31/31 requests pass). Note the final report requires the roadmap to be completed first — the Runner order (Roadmaps → Reports) already handles this via the **Complete Roadmap** request.
@@ -106,7 +106,7 @@ The seeded fresher is assigned to the seeded PM. Call `POST /api/demo/reset` any
 ### Login
 
 ```bash
-curl -X POST http://10.0.128.20:8000/api/auth/login \
+curl -X POST https://skill-flow-ai-beckend.vercel.app/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email": "fresher@skillflow.local", "password": "Demo@123"}'
 ```
@@ -317,7 +317,7 @@ Both the fresher-facing views and the PM dashboard read the same source of truth
 
 ```js
 async function login(email, password) {
-  const res = await fetch('http://10.0.128.20:8000/api/auth/login', {
+  const res = await fetch('https://skill-flow-ai-beckend.vercel.app/api/auth/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password })
@@ -334,7 +334,7 @@ async function login(email, password) {
 ```js
 async function getProfile() {
   const token = localStorage.getItem('access_token');
-  const res = await fetch('http://10.0.128.20:8000/api/freshers/me/profile', {
+  const res = await fetch('https://skill-flow-ai-beckend.vercel.app/api/freshers/me/profile', {
     headers: { Authorization: `Bearer ${token}` }
   });
   if (!res.ok) throw new Error(`Failed to fetch profile: ${res.status}`);
@@ -347,7 +347,7 @@ async function getProfile() {
 ```js
 async function submitDailyReport(reportBody) {
   const token = localStorage.getItem('access_token');
-  const res = await fetch('http://10.0.128.20:8000/api/freshers/me/reports/daily', {
+  const res = await fetch('https://skill-flow-ai-beckend.vercel.app/api/freshers/me/reports/daily', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -366,7 +366,7 @@ async function submitDailyReport(reportBody) {
 async function pollPmDashboard(onUpdate, intervalMs = 20000) {
   const token = localStorage.getItem('access_token');
   async function fetchOnce() {
-    const res = await fetch('http://10.0.128.20:8000/api/pm/dashboard', {
+    const res = await fetch('https://skill-flow-ai-beckend.vercel.app/api/pm/dashboard', {
       headers: { Authorization: `Bearer ${token}` }
     });
     if (!res.ok) throw new Error(`Dashboard fetch failed: ${res.status}`);

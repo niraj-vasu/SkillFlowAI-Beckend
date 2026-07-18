@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "SkillFlow AI v2 \u2014 Backend",
-    "description": "Local demo API for the SkillFlow AI fresher & PM dashboards.\n\nBase URL: {{base_url}} (default http://10.0.128.20:8000). Swagger: {{base_url}}/docs\n\nAUTH: Call **Auth > Login (Fresher)** and **Auth > Login (PM)** first \u2014 their test scripts store {{fresher_token}} and {{pm_token}} automatically. Every other request sends the right bearer token via a header.\n\nRUN ORDER (Collection Runner friendly): Login Fresher -> Login PM -> Create Roadmap (stores {{roadmap_id}}) -> Create Daily Report (stores {{report_id}}) -> ... -> Complete Roadmap -> Create Final Report -> PM Dashboard.\n\nThe backend performs NO AI generation; it stores and serves the AI results the frontend submits.",
+    "description": "Local demo API for the SkillFlow AI fresher & PM dashboards.\n\nBase URL: {{base_url}} (default https://skill-flow-ai-beckend.vercel.app). Swagger: {{base_url}}/docs\n\nAUTH: Call **Auth > Login (Fresher)** and **Auth > Login (PM)** first \u2014 their test scripts store {{fresher_token}} and {{pm_token}} automatically. Every other request sends the right bearer token via a header.\n\nRUN ORDER (Collection Runner friendly): Login Fresher -> Login PM -> Create Roadmap (stores {{roadmap_id}}) -> Create Daily Report (stores {{report_id}}) -> ... -> Complete Roadmap -> Create Final Report -> PM Dashboard.\n\nThe backend performs NO AI generation; it stores and serves the AI results the frontend submits.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -1020,7 +1020,7 @@
   "variable": [
     {
       "key": "base_url",
-      "value": "http://10.0.128.20:8000"
+      "value": "https://skill-flow-ai-beckend.vercel.app"
     },
     {
       "key": "fresher_token",
