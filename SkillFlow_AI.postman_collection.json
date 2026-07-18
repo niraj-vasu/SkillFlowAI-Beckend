@@ -1,0 +1,1046 @@
+{
+  "info": {
+    "name": "SkillFlow AI v2 \u2014 Backend",
+    "description": "Local demo API for the SkillFlow AI fresher & PM dashboards.\n\nBase URL: {{base_url}} (default http://10.0.128.20:8000). Swagger: {{base_url}}/docs\n\nAUTH: Call **Auth > Login (Fresher)** and **Auth > Login (PM)** first \u2014 their test scripts store {{fresher_token}} and {{pm_token}} automatically. Every other request sends the right bearer token via a header.\n\nRUN ORDER (Collection Runner friendly): Login Fresher -> Login PM -> Create Roadmap (stores {{roadmap_id}}) -> Create Daily Report (stores {{report_id}}) -> ... -> Complete Roadmap -> Create Final Report -> PM Dashboard.\n\nThe backend performs NO AI generation; it stores and serves the AI results the frontend submits.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "System",
+      "description": "",
+      "item": [
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Liveness check. No auth."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Demo Reset",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/demo/reset",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "demo",
+                "reset"
+              ]
+            },
+            "description": "Idempotently recreates the seeded demo dataset (users, assignment, profile, sample roadmap, sample daily report). Safe to run before every demo."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "description": "",
+      "item": [
+        {
+          "name": "Login (Fresher)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Returns a JWT and the user object. Test script stores the token in {{fresher_token}}.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"fresher@skillflow.local\",\n  \"password\": \"Demo@123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var res = pm.response.json();",
+                  "pm.collectionVariables.set('fresher_token', res.access_token);",
+                  "pm.collectionVariables.set('fresher_id', res.user.id);",
+                  "pm.test('logged in as fresher', function () { pm.expect(res.user.role).to.eql('FRESHER'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login (PM)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Returns a JWT and the user object. Test script stores the token in {{pm_token}}.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"pm@skillflow.local\",\n  \"password\": \"Demo@123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var res = pm.response.json();",
+                  "pm.collectionVariables.set('pm_token', res.access_token);",
+                  "pm.test('logged in as PM', function () { pm.expect(res.user.role).to.eql('PM'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Me (Fresher)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{fresher_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Returns the authenticated user derived from the bearer token."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Me (PM)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{pm_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Returns the authenticated user derived from the bearer token."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Fresher (role: FRESHER)",
+      "description": "",
+      "item": [
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{fresher_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/freshers/me/profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "freshers",
+                "me",
+                "profile"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Update My Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{fresher_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/freshers/me/profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "freshers",
+                "me",
+                "profile"
+              ]
+            },
+            "description": "Only target_role, joining_date, resume_summary, interview_evaluation, profile_metadata are editable.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"target_role\": \"<the fresher's target role / department>\",\n  \"joining_date\": \"2026-07-01\",\n  \"resume_summary\": {\n    \"summary\": \"<resume summary from your analyzer>\",\n    \"skills\": [\n      \"<skill>\",\n      \"<skill>\"\n    ]\n  },\n  \"interview_evaluation\": {\n    \"overall\": \"<interview summary>\",\n    \"scores\": {\n      \"<criterion>\": 70\n    }\n  },\n  \"profile_metadata\": {\n    \"cohort\": \"<cohort>\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Roadmaps",
+          "description": "",
+          "item": [
+            {
+              "name": "Create Roadmap",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{fresher_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/freshers/me/roadmaps",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "freshers",
+                    "me",
+                    "roadmaps"
+                  ]
+                },
+                "description": "Creates the next roadmap version and sets it current. IDEMPOTENT (change #7): re-POSTing the same client_roadmap_id returns the existing roadmap (200) instead of a new version \u2014 a new version needs a new client_roadmap_id. roadmap_payload.current_task holds the backend-owned task the daily report is graded against. Required: client_roadmap_id, title, target_role, roadmap_payload (non-empty). Stores {{roadmap_id}}.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"client_roadmap_id\": \"WEB-RM-001\",\n  \"title\": \"Fresher Onboarding Roadmap\",\n  \"target_role\": \"<the fresher's target role / department>\",\n  \"start_date\": \"2026-07-20\",\n  \"target_completion_date\": \"2026-10-20\",\n  \"roadmap_payload\": {\n    \"schema_version\": \"1.0\",\n    \"generation_mode\": \"diagnostic\",\n    \"pace_status\": \"no_evidence\",\n    \"weeks\": [],\n    \"competencies\": [\n      \"<competency_key>\",\n      \"<competency_key>\"\n    ],\n    \"milestones\": [],\n    \"completion_criteria\": \"All weeks completed with passing evaluations\",\n    \"current_task\": {\n      \"task_id\": \"TASK-001\",\n      \"task_title\": \"Week 1 diagnostic task\",\n      \"employee_facing_instruction\": \"Complete the task your roadmap describes and submit your work.\",\n      \"sample_input\": {},\n      \"required_resources\": [],\n      \"acceptance_criteria\": [\n        \"Meets the stated objective\",\n        \"Work is documented\"\n      ],\n      \"evaluation_criteria\": [\n        \"Correctness\",\n        \"Clarity\",\n        \"Ownership\"\n      ]\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "var res = pm.response.json();",
+                      "pm.collectionVariables.set('roadmap_id', res.id);",
+                      "pm.test('roadmap created', function () { pm.expect(res.status).to.eql('ACTIVE'); });"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "List Roadmaps",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{fresher_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/freshers/me/roadmaps",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "freshers",
+                    "me",
+                    "roadmaps"
+                  ]
+                },
+                "description": ""
+              },
+              "response": []
+            },
+            {
+              "name": "Get Current Roadmap",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{fresher_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/freshers/me/roadmaps/current",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "freshers",
+                    "me",
+                    "roadmaps",
+                    "current"
+                  ]
+                },
+                "description": ""
+              },
+              "response": []
+            },
+            {
+              "name": "Get Roadmap by ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{fresher_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/freshers/me/roadmaps/{{roadmap_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "freshers",
+                    "me",
+                    "roadmaps",
+                    "{{roadmap_id}}"
+                  ]
+                },
+                "description": ""
+              },
+              "response": []
+            },
+            {
+              "name": "Update Roadmap Progress",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{fresher_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/freshers/me/roadmaps/{{roadmap_id}}/progress",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "freshers",
+                    "me",
+                    "roadmaps",
+                    "{{roadmap_id}}",
+                    "progress"
+                  ]
+                },
+                "description": "Updates completion_pct and/or status only. Never replaces the roadmap payload.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"completion_pct\": 40,\n  \"status\": \"ACTIVE\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Complete Roadmap",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{fresher_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/freshers/me/roadmaps/{{roadmap_id}}/complete",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "freshers",
+                    "me",
+                    "roadmaps",
+                    "{{roadmap_id}}",
+                    "complete"
+                  ]
+                },
+                "description": "Sets status=COMPLETED and completion_pct=100. Does NOT create a final report."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Reports",
+          "description": "",
+          "item": [
+            {
+              "name": "Create Daily Report",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{fresher_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/freshers/me/reports/daily",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "freshers",
+                    "me",
+                    "reports",
+                    "daily"
+                  ]
+                },
+                "description": "Submit the daily evaluation. Required top-level: client_report_id, roadmap_id, report_date, overall_score (0-100), report_payload. Required in report_payload: task_id, submission, evaluation. SOURCE OF TRUTH (change #4): the backend looks up current_task by task_id and OVERWRITES report_payload.evaluation.acceptance_criteria / .evaluation_criteria with the saved roadmap values (adding criteria_source: 'backend_roadmap' and a current_task_snapshot) \u2014 any criteria you send are ignored. Idempotent on client_report_id. Stores {{report_id}}.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"client_report_id\": \"WEB-DAILY-2026-07-18-USR-F001\",\n  \"roadmap_id\": \"{{roadmap_id}}\",\n  \"report_date\": \"2026-07-18\",\n  \"overall_score\": 76,\n  \"needs_human_interaction\": true,\n  \"report_payload\": {\n    \"schema_version\": \"1.0\",\n    \"task_id\": \"TASK-001\",\n    \"submission\": {\n      \"summary\": \"<what the employee submitted>\",\n      \"reference\": \"<link or id>\"\n    },\n    \"ai_usage_disclosure\": {\n      \"used_ai\": true,\n      \"tools\": [\n        \"<tool>\"\n      ],\n      \"what_ai_generated\": \"<...>\",\n      \"what_employee_corrected\": \"<...>\"\n    },\n    \"evaluation\": {\n      \"verified_skills\": [\n        \"<skill name>\",\n        \"<skill name>\"\n      ],\n      \"weak_areas\": [\n        \"<gap>\"\n      ],\n      \"evidence\": [\n        \"<evidence item>\"\n      ],\n      \"dashboard_update\": {\n        \"next_focus\": \"<next focus>\",\n        \"improvement_pct\": 12.5\n      },\n      \"kpis\": [\n        {\n          \"key\": \"<kpi_key>\",\n          \"name\": \"<KPI Name>\",\n          \"score\": 78,\n          \"confidence\": 0.88\n        }\n      ]\n    },\n    \"qna\": {\n      \"questions\": [\n        {\n          \"question\": \"<question the agent asked>\",\n          \"answer\": \"<employee answer>\",\n          \"score\": 82\n        }\n      ],\n      \"summary\": \"<short summary>\"\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "var res = pm.response.json();",
+                      "pm.collectionVariables.set('report_id', res.id);",
+                      "pm.test('report stored', function () { pm.expect(res.id).to.be.a('string'); });",
+                      "pm.test('criteria came from backend', function () {",
+                      "  pm.expect(res.report_payload.evaluation.criteria_source).to.eql('backend_roadmap');",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Create Weekly Report",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{fresher_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/freshers/me/reports/weekly",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "freshers",
+                    "me",
+                    "reports",
+                    "weekly"
+                  ]
+                },
+                "description": "Requires period_start and period_end.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"client_report_id\": \"WEB-WEEKLY-2026-W29-USR-F001\",\n  \"roadmap_id\": \"{{roadmap_id}}\",\n  \"period_start\": \"2026-07-13\",\n  \"period_end\": \"2026-07-18\",\n  \"overall_score\": 74,\n  \"needs_human_interaction\": false,\n  \"report_payload\": {\n    \"schema_version\": \"1.0\",\n    \"strengths\": [\n      \"<strength>\",\n      \"<strength>\"\n    ],\n    \"weaknesses\": [\n      \"<gap>\"\n    ],\n    \"kpis\": [\n      {\n        \"key\": \"learning_velocity\",\n        \"name\": \"Learning Velocity\",\n        \"score\": 72,\n        \"confidence\": 0.8\n      }\n    ],\n    \"summary\": \"<weekly summary>\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Create Final Report",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{fresher_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/freshers/me/reports/final",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "freshers",
+                    "me",
+                    "reports",
+                    "final"
+                  ]
+                },
+                "description": "Requires roadmap_id; the roadmap must be COMPLETED (or 100%). Run 'Complete Roadmap' first.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"client_report_id\": \"WEB-FINAL-USR-F001\",\n  \"roadmap_id\": \"{{roadmap_id}}\",\n  \"report_date\": \"2026-10-20\",\n  \"overall_score\": 82,\n  \"needs_human_interaction\": false,\n  \"report_payload\": {\n    \"schema_version\": \"1.0\",\n    \"summary\": \"Roadmap completed. Project-ready on core AI Product Developer competencies.\",\n    \"strengths\": [\n      \"API integration\",\n      \"Testing discipline\",\n      \"Responsible AI usage\"\n    ],\n    \"weaknesses\": [\n      \"Architecture depth\"\n    ],\n    \"kpis\": [\n      {\n        \"key\": \"technical_proficiency\",\n        \"name\": \"Technical Proficiency\",\n        \"score\": 82,\n        \"confidence\": 0.9\n      }\n    ],\n    \"readiness\": \"READY\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "List All Reports",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{fresher_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/freshers/me/reports?limit=50&offset=0&roadmap_id={{roadmap_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "freshers",
+                    "me",
+                    "reports"
+                  ],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "50"
+                    },
+                    {
+                      "key": "offset",
+                      "value": "0"
+                    },
+                    {
+                      "key": "roadmap_id",
+                      "value": "{{roadmap_id}}"
+                    }
+                  ]
+                },
+                "description": "Filters: roadmap_id, start_date, end_date, limit, offset."
+              },
+              "response": []
+            },
+            {
+              "name": "List Daily Reports",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{fresher_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/freshers/me/reports/daily",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "freshers",
+                    "me",
+                    "reports",
+                    "daily"
+                  ]
+                },
+                "description": ""
+              },
+              "response": []
+            },
+            {
+              "name": "List Weekly Reports",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{fresher_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/freshers/me/reports/weekly",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "freshers",
+                    "me",
+                    "reports",
+                    "weekly"
+                  ]
+                },
+                "description": ""
+              },
+              "response": []
+            },
+            {
+              "name": "List Final Reports",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{fresher_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/freshers/me/reports/final",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "freshers",
+                    "me",
+                    "reports",
+                    "final"
+                  ]
+                },
+                "description": ""
+              },
+              "response": []
+            },
+            {
+              "name": "Get Report by ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{fresher_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/freshers/me/reports/{{report_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "freshers",
+                    "me",
+                    "reports",
+                    "{{report_id}}"
+                  ]
+                },
+                "description": ""
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "PM (role: PM)",
+      "description": "",
+      "item": [
+        {
+          "name": "List Assigned Freshers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{pm_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/pm/freshers",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "pm",
+                "freshers"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Fresher Overview",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{pm_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/pm/freshers/{{fresher_id}}/overview",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "pm",
+                "freshers",
+                "{{fresher_id}}",
+                "overview"
+              ]
+            },
+            "description": "Profile + current roadmap + latest daily/weekly/final report. 403 if the fresher isn't assigned to this PM; 404 if the fresher doesn't exist."
+          },
+          "response": []
+        },
+        {
+          "name": "Fresher Roadmaps",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{pm_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/pm/freshers/{{fresher_id}}/roadmaps",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "pm",
+                "freshers",
+                "{{fresher_id}}",
+                "roadmaps"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Fresher Current Roadmap",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{pm_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/pm/freshers/{{fresher_id}}/roadmaps/current",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "pm",
+                "freshers",
+                "{{fresher_id}}",
+                "roadmaps",
+                "current"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Fresher Reports (all)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{pm_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/pm/freshers/{{fresher_id}}/reports",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "pm",
+                "freshers",
+                "{{fresher_id}}",
+                "reports"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Fresher Daily Reports",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{pm_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/pm/freshers/{{fresher_id}}/reports/daily",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "pm",
+                "freshers",
+                "{{fresher_id}}",
+                "reports",
+                "daily"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Fresher Weekly Reports",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{pm_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/pm/freshers/{{fresher_id}}/reports/weekly",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "pm",
+                "freshers",
+                "{{fresher_id}}",
+                "reports",
+                "weekly"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Fresher Final Reports",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{pm_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/pm/freshers/{{fresher_id}}/reports/final",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "pm",
+                "freshers",
+                "{{fresher_id}}",
+                "reports",
+                "final"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "PM Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{pm_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/pm/dashboard",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "pm",
+                "dashboard"
+              ]
+            },
+            "description": "Team summary + one card per assigned fresher (current roadmap, latest reports, strengths/weaknesses, needs_human_interaction). Poll this every 15-30s."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://10.0.128.20:8000"
+    },
+    {
+      "key": "fresher_token",
+      "value": ""
+    },
+    {
+      "key": "pm_token",
+      "value": ""
+    },
+    {
+      "key": "fresher_id",
+      "value": "USR-F001"
+    },
+    {
+      "key": "roadmap_id",
+      "value": ""
+    },
+    {
+      "key": "report_id",
+      "value": ""
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+.env
+*.db
+*.db-journal
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+htmlcov/
+.coverage
+dist/
+*.egg-info/
+*.log
+*.pid
